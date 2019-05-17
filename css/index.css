@@ -1,0 +1,71 @@
+*{
+    margin: 0;
+    padding: 0;
+}
+.swiper-main{
+    width: 600px;
+    height: 300px;
+    background: #000000;
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+}
+.swiper-content{
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+.swiper-item{
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    left: 0;
+    top: 0;
+}
+.swiper-item img{
+    width: 100%;
+    display: block;
+}
+.swiper-point{
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+.swiper-circle{
+    float: left;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background-color: #ccc;
+    margin: 0 5px;
+    cursor: pointer;
+}
+.current-point{
+    background-color: #000;
+}
+.swiper-arrow{
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #000;
+    cursor: pointer;
+    border: none;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    margin-top: auto;
+    margin-bottom: auto;
+}
+.swiper-arrow img{
+    display: block;
+    width: 20px;
+    height: 20px;
+    margin: 10px auto;
+}
+.arrow-left{
+    left: 10px;
+}
+.arrow-right{
+    right: 10px;
+}
