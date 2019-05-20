@@ -20,6 +20,8 @@ const swiper = {
     _prevLeft:null,
     _nextLeft:null,
     _touchItem:null,
+    _autoPlay:true,
+    _isMobile:false,
     init:function(parent,imgArr,config,callBack){
         this._parent = parent;
         this._parentW = parent.width();
@@ -31,8 +33,24 @@ const swiper = {
         this._itemArr = [];
         this._pointArr = [];
         this._num = imgArr.length;
+        this._isMobile =  (typeof this._config.ismobile === 'boolean') ? this._config.ismobile : this.isMobile();
+        this._autoPlay = (typeof this._config.autoplay === 'boolean') ? this._config.autoplay : true;
         this._canMove = false;
         this.addEle();
+        this.isMobile();
+    },
+    /**判断是否是移动端 */
+    isMobile : function(){  
+        let userAgentInfo = navigator.userAgent;//获取游览器请求的用户代理头的值
+        let Agents = ["Android", "iPhone","SymbianOS", "Windows Phone","iPad","iPod"];//定义移动设备数组
+        let isMobile = false;
+        for (let v = 0; v < Agents.length; v++) {
+            if (userAgentInfo.indexOf(Agents[v]) > 0) {    
+                isMobile = true;
+                break;
+            }
+        }
+        return isMobile;
     },
     /**填充元素 */
     addEle:function(){
@@ -62,8 +80,8 @@ const swiper = {
     arrow:function(){
         let that = this;
         if(this._config.arrowtype == 'move'){
-            this._parent.children('.arrow-left').fadeOut();
-            this._parent.children('.arrow-right').fadeOut();
+            this._parent.children('.arrow-left').hide();
+            this._parent.children('.arrow-right').hide();
             this._parent.on('mouseenter', function(){
                 that._parent.children('.arrow-left').fadeIn();
             });
@@ -95,17 +113,16 @@ const swiper = {
     },
     /**判断是否自动轮播*/
     autoPlay:function(){
-        let autoplay = (typeof this._config.autoplay === 'boolean') ? this._config.autoplay : true;
-        if(autoplay){
+        if(this._autoPlay){
             let that = this;
             this._time =  this._config.time || 3000;
             this.createTimer();
             this._parent.on('mouseover', function(){
-				clearInterval(that._timerFn);
-			});
+                clearInterval(that._timerFn);
+            });
             this._parent.on('mouseout', function(){
                 that.createTimer();
-			});
+            });
         }
      },
      createTimer:function(){
@@ -136,8 +153,11 @@ const swiper = {
      },
      downFn:function(e){
         e.preventDefault();
+        if(this._isMobile && this._autoPlay){
+            clearInterval(this._timerFn);
+        }
         this._canMove = true;
-        this._startX = e.pageX;
+        this._startX = this._isMobile ? e.originalEvent.targetTouches[0].pageX : e.pageX;
         this._itemArr[this._currentPage].css('left',"0");
         if(this._currentPage == 0){
             this._itemArr[this._num - 1].css('left',"-100%");
@@ -158,7 +178,7 @@ const swiper = {
      },
      moveFn:function(e){
         if(this._canMove){
-            this._endX = e.pageX;
+            this._endX = this._isMobile ? e.originalEvent.targetTouches[0].pageX : e.pageX;
             this._movePos = this._endX - this._startX;
             this._itemArr[this._currentPage].animate({'left':this._movePos},0);
             if(this._currentPage == 0){
@@ -175,9 +195,18 @@ const swiper = {
      },
      upFn(e){
         if(!this._canMove) return;
-        this._touchItem.off('mousedown');
-        this._touchItem.off('mousemove');
-        $(document).off('mouseup');
+        if(this._isMobile){
+            this._touchItem.off('touchstart');
+            this._touchItem.off('touchmove');
+            $(document).off('touchend');
+        }else{
+            this._touchItem.off('mousedown');
+            this._touchItem.off('mouseup');
+            $(document).off('mouseup');
+        }
+        if(this._isMobile && this._autoPlay){
+            this.createTimer();
+        }
         if(this._canMove) this._canMove = false;
         if(Math.abs(this._movePos) > this._parentW / 3){
             if(this._movePos > 0){
@@ -233,9 +262,16 @@ const swiper = {
         let cantouch = (typeof this._config.cantouch === 'boolean') ? this._config.cantouch : true;
         if(cantouch){
             this._touchItem = this._itemArr[this._currentPage];
-            this._touchItem.on('mousedown',this.downFn.bind(this));
-            this._touchItem.on('mousemove',this.moveFn.bind(this));
-            $(document).on('mouseup',this.upFn.bind(this));
+            if(this._isMobile){
+                this._touchItem.on('touchstart',this.downFn.bind(this));
+                this._touchItem.on('touchmove',this.moveFn.bind(this));
+                $(document).on('touchend',this.upFn.bind(this));
+            }else{
+                this._touchItem.on('mousedown',this.downFn.bind(this));
+                this._touchItem.on('mousemove',this.moveFn.bind(this));
+                $(document).on('mouseup',this.upFn.bind(this));
+            }
+           
         }
      }
 }
