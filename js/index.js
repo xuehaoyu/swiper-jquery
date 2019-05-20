@@ -14,10 +14,11 @@ $(function(){
         "./img/4.jpg"
     ],
     {
-        arrowtype: 'move',	//可选，默认一直显示 - 'move' / 'none'	(鼠标移上显示 / 不显示 )
-        autoplay: true,	//可选，默认true - true / false (开启轮播/关闭轮播)
-        cantouch: true,//可选，默认true - true / false (开启拖拽切换/关闭拖切换)
-        time:3000	//可选，默认3000
+         // ismobile: false,//可选，不填则自动判断客户端，默认false - true / false(PC端/移动端)
+         arrowtype: 'move',	//可选，默认一直显示 - 'move（移动端不支持）' / 'none'	(鼠标移上显示 / 不显示 )
+         autoplay: true,	//可选，默认true - true / false (开启轮播/关闭轮播)
+         cantouch: true,//可选，默认true - true / false (开启拖拽切换/关闭拖切换)
+         time:3000	//可选，默认3000
     },function(list){
         console.log("create success",list);
     }
