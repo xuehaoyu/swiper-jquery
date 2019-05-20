@@ -14,6 +14,7 @@ const swiper = {
     _currentPage:0,
     _num:null,
     _time:3000,
+    _movePos:0,
     _canMove:false,
     _startX:null,
     _endX:null,
@@ -22,6 +23,7 @@ const swiper = {
     _touchItem:null,
     _autoPlay:true,
     _isMobile:false,
+    _showPoint:true,
     init:function(parent,imgArr,config,callBack){
         this._parent = parent;
         this._parentW = parent.width();
@@ -35,9 +37,9 @@ const swiper = {
         this._num = imgArr.length;
         this._isMobile =  (typeof this._config.ismobile === 'boolean') ? this._config.ismobile : this.isMobile();
         this._autoPlay = (typeof this._config.autoplay === 'boolean') ? this._config.autoplay : true;
+        this._showPoint = (typeof this._config.showpoint === 'boolean') ? this._config.showpoint : true;
         this._canMove = false;
         this.addEle();
-        this.isMobile();
     },
     /**判断是否是移动端 */
     isMobile : function(){  
@@ -57,8 +59,19 @@ const swiper = {
         this._swiperContent = this._parent.children(".swiper-content");
         this._swiperPoint = this._parent.children(".swiper-point");
         this._imgArr.map((item,index)=>{
-            let swiperItem = $(`<div class="swiper-item"><img src="${item}" alt=""></div>`);
+            let imgSrc;
+            if(typeof item === 'object'){
+                imgSrc = item.imgUrl;
+            }else{
+                imgSrc = item;
+            }
+            let swiperItem = $(`<div class="swiper-item"><img src="${imgSrc}" alt=""></div>`);
             swiperItem.appendTo(this._swiperContent);
+            if(typeof item === 'object'){
+                for (let key in item){
+                    swiperItem.prop(key,item[key]);
+                }
+            }
             this._itemArr.push(swiperItem);
             let pointItem = $(`<div class="swiper-circle"></div>`);
             pointItem.appendTo(this._swiperPoint);
@@ -74,7 +87,14 @@ const swiper = {
         this.arrow();
         this.autoPlay();
         this.addTouch();
+        this.showPoint();
         if(this._callBack) this._callBack(this._itemArr);
+    },
+    /**判断是都显示轮播点 */
+    showPoint:function(){
+        if(!this._showPoint){
+            this._parent.children('.swiper-point').hide();
+        }
     },
     /**判断是否显示左右按钮 */
     arrow:function(){
@@ -119,6 +139,7 @@ const swiper = {
             this.createTimer();
             this._parent.on('mouseover', function(){
                 clearInterval(that._timerFn);
+                that._timerFn = null;
             });
             this._parent.on('mouseout', function(){
                 that.createTimer();
@@ -153,9 +174,7 @@ const swiper = {
      },
      downFn:function(e){
         e.preventDefault();
-        if(this._isMobile && this._autoPlay){
-            clearInterval(this._timerFn);
-        }
+        this._movePos = 0;
         this._canMove = true;
         this._startX = this._isMobile ? e.originalEvent.targetTouches[0].pageX : e.pageX;
         this._itemArr[this._currentPage].css('left',"0");
@@ -175,9 +194,20 @@ const swiper = {
             this._prevLeft = this._itemArr[this._currentPage - 1].position().left;
             this._nextLeft =  this._itemArr[this._currentPage +1].position().left;
         }
+        if(this._isMobile){
+            this._touchItem.on('touchmove',this.moveFn.bind(this));
+            $(document).on('touchend',this.upFn.bind(this));
+        }else{
+            this._touchItem.on('mousemove',this.moveFn.bind(this));
+            $(document).on('mouseup',this.upFn.bind(this));
+        }
      },
      moveFn:function(e){
         if(this._canMove){
+            if(this._isMobile && this._autoPlay && this._timerFn != null){
+                clearInterval(this._timerFn);
+                this._timerFn = null;
+            }
             this._endX = this._isMobile ? e.originalEvent.targetTouches[0].pageX : e.pageX;
             this._movePos = this._endX - this._startX;
             this._itemArr[this._currentPage].animate({'left':this._movePos},0);
@@ -201,10 +231,10 @@ const swiper = {
             $(document).off('touchend');
         }else{
             this._touchItem.off('mousedown');
-            this._touchItem.off('mouseup');
+            this._touchItem.off('mousemove');
             $(document).off('mouseup');
         }
-        if(this._isMobile && this._autoPlay){
+        if(this._isMobile && this._autoPlay && this._timerFn == null){
             this.createTimer();
         }
         if(this._canMove) this._canMove = false;
@@ -264,14 +294,9 @@ const swiper = {
             this._touchItem = this._itemArr[this._currentPage];
             if(this._isMobile){
                 this._touchItem.on('touchstart',this.downFn.bind(this));
-                this._touchItem.on('touchmove',this.moveFn.bind(this));
-                $(document).on('touchend',this.upFn.bind(this));
             }else{
                 this._touchItem.on('mousedown',this.downFn.bind(this));
-                this._touchItem.on('mousemove',this.moveFn.bind(this));
-                $(document).on('mouseup',this.upFn.bind(this));
             }
-           
         }
      }
 }
