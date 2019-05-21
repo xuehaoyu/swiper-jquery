@@ -15,8 +15,6 @@ $(function(){
     [
         "./img/1.jpg",
         "./img/2.jpg",
-        "./img/3.jpg",
-        "./img/4.jpg"
     ],
     {
          // ismobile: false,//可选，不填则自动判断客户端，默认false - true / false(PC端/移动端)

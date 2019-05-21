@@ -27,6 +27,8 @@ const swiper = {
     _showPoint:true,
     _startTime:null,
     _endTime:null,
+    _prevFlag:true,
+    _nextFlag:true,
     init:function(parent,imgArr,config,clickEvent,callBack){
         this._parent = parent;
         this._parentW = parent.width();
@@ -38,7 +40,7 @@ const swiper = {
         this._time = 3000;
         this._itemArr = [];
         this._pointArr = [];
-        this._num = imgArr.length;
+        this._num = imgArr ? imgArr.length : 0;
         this._isMobile =  (typeof this._config.ismobile === 'boolean') ? this._config.ismobile : this.isMobile();
         this._autoPlay = (typeof this._config.autoplay === 'boolean') ? this._config.autoplay : true;
         this._showPoint = (typeof this._config.showpoint === 'boolean') ? this._config.showpoint : true;
@@ -60,6 +62,7 @@ const swiper = {
     },
     /**填充元素 */
     addEle:function(){
+        if(this._num <= 0)return;
         this._swiperContent = this._parent.children(".swiper-content");
         this._swiperPoint = this._parent.children(".swiper-point");
         this._imgArr.map((item,index)=>{
@@ -158,6 +161,7 @@ const swiper = {
      },
      /**转到下一个 */
      next:function(){
+        if(this._num <= 1) return;
         this._itemArr[this._currentPage].animate({'left': "-100%"},300);
         this._pointArr[this._currentPage].removeClass("current-point");
         this._currentPage ++;
@@ -168,6 +172,7 @@ const swiper = {
      },
      /**转到上一个*/
      prev:function(){
+        if(this._num <= 1) return;
         this._itemArr[this._currentPage].animate({'left': "100%"},300);
         this._pointArr[this._currentPage].removeClass("current-point");
         this._currentPage --;
@@ -183,21 +188,23 @@ const swiper = {
         this._canMove = true;
         this._startX = this._isMobile ? e.originalEvent.targetTouches[0].pageX : e.pageX;
         this._itemArr[this._currentPage].css('left',"0");
-        if(this._currentPage == 0){
-            this._itemArr[this._num - 1].css('left',"-100%");
-            this._itemArr[this._currentPage +1].css('left',"100%");
-            this._prevLeft = this._itemArr[this._num - 1].position().left;
-            this._nextLeft =  this._itemArr[this._currentPage +1].position().left;
-        }else if(this._currentPage == this._num - 1){
-            this._itemArr[this._currentPage - 1].css('left',"-100%");
-            this._itemArr[0].css('left',"100%");
-            this._prevLeft = this._itemArr[this._currentPage - 1].position().left;
-            this._nextLeft =  this._itemArr[0].position().left;
-        }else{
-            this._itemArr[this._currentPage - 1].css('left',"-100%");
-            this._itemArr[this._currentPage +1].css('left',"100%");
-            this._prevLeft = this._itemArr[this._currentPage - 1].position().left;
-            this._nextLeft =  this._itemArr[this._currentPage +1].position().left;
+        if(this._num > 2){
+            if(this._currentPage == 0){
+                this._itemArr[this._num - 1].css('left',"-100%");
+                this._itemArr[this._currentPage +1].css('left',"100%");
+                this._prevLeft = this._itemArr[this._num - 1].position().left;
+                this._nextLeft =  this._itemArr[this._currentPage +1].position().left;
+            }else if(this._currentPage == this._num - 1){
+                this._itemArr[this._currentPage - 1].css('left',"-100%");
+                this._itemArr[0].css('left',"100%");
+                this._prevLeft = this._itemArr[this._currentPage - 1].position().left;
+                this._nextLeft =  this._itemArr[0].position().left;
+            }else{
+                this._itemArr[this._currentPage - 1].css('left',"-100%");
+                this._itemArr[this._currentPage +1].css('left',"100%");
+                this._prevLeft = this._itemArr[this._currentPage - 1].position().left;
+                this._nextLeft =  this._itemArr[this._currentPage +1].position().left;
+            }
         }
         if(this._isMobile){
             this._touchItem.on('touchmove',this.moveFn.bind(this));
@@ -216,15 +223,36 @@ const swiper = {
             this._endX = this._isMobile ? e.originalEvent.targetTouches[0].pageX : e.pageX;
             this._movePos = this._endX - this._startX;
             this._itemArr[this._currentPage].animate({'left':this._movePos},0);
-            if(this._currentPage == 0){
-                this._itemArr[this._num - 1].animate({'left':this._prevLeft + this._movePos},0);
-                this._itemArr[this._currentPage +1].animate({'left':this._nextLeft + this._movePos},0);
-            }else if(this._currentPage == this._num - 1){
-                this._itemArr[this._currentPage - 1].animate({'left':this._prevLeft + this._movePos},0);
-                this._itemArr[0].animate({'left':this._nextLeft + this._movePos},0);
-            }else{
-                this._itemArr[this._currentPage - 1].animate({'left':this._prevLeft + this._movePos},0);
-                this._itemArr[this._currentPage +1].animate({'left':this._nextLeft + this._movePos},0);
+            if(this._num > 2){
+                if(this._currentPage == 0){
+                    this._itemArr[this._num - 1].animate({'left':this._prevLeft + this._movePos},0);
+                    this._itemArr[this._currentPage +1].animate({'left':this._nextLeft + this._movePos},0);
+                }else if(this._currentPage == this._num - 1){
+                    this._itemArr[this._currentPage - 1].animate({'left':this._prevLeft + this._movePos},0);
+                    this._itemArr[0].animate({'left':this._nextLeft + this._movePos},0);
+                }else{
+                    this._itemArr[this._currentPage - 1].animate({'left':this._prevLeft + this._movePos},0);
+                    this._itemArr[this._currentPage +1].animate({'left':this._nextLeft + this._movePos},0);
+                }
+            }else if(this._num == 2){
+                let index = this._currentPage == 0 ? 1 : 0;
+                if(this._movePos > 0){
+                    if(!this._nextFlag) this._nextFlag = true;
+                    if(this._prevFlag){
+                        this._prevFlag = false;
+                        this._itemArr[index].css('left','-100%');
+                        this._prevLeft = this._itemArr[index].position().left;
+                    }
+                    this._itemArr[index].animate({'left':this._prevLeft + this._movePos},0);
+                }else{
+                    if(!this._prevFlag) this._prevFlag = true;
+                    if(this._nextFlag){
+                        this._nextFlag = false;
+                        this._itemArr[index].css('left','100%');
+                        this._nextLeft = this._itemArr[index].position().left;
+                    }
+                    this._itemArr[index].animate({'left':this._nextLeft + this._movePos},0);
+                }
             }
         }
      },
@@ -247,52 +275,76 @@ const swiper = {
             this.createTimer();
         }
         if(this._canMove) this._canMove = false;
-        if(Math.abs(this._movePos) > this._parentW / 3){
-            if(this._movePos > 0){
-                this._itemArr[this._currentPage].animate({'left':'100%'},300);
-                if(this._currentPage == 0){
-                    this._itemArr[this._num - 1].animate({'left':0},300);
-                    this._itemArr[this._currentPage +1].css('left','100%');
-                }else if(this._currentPage == this._num - 1){
-                    this._itemArr[this._currentPage - 1].animate({'left':0},300);
-                    this._itemArr[0].css('left','100%');
+        if(this._num > 2){
+            if(Math.abs(this._movePos) > this._parentW / 3){
+                if(this._movePos > 0){
+                    this._itemArr[this._currentPage].animate({'left':'100%'},300);
+                    if(this._currentPage == 0){
+                        this._itemArr[this._num - 1].animate({'left':0},300);
+                        this._itemArr[this._currentPage +1].css('left','100%');
+                    }else if(this._currentPage == this._num - 1){
+                        this._itemArr[this._currentPage - 1].animate({'left':0},300);
+                        this._itemArr[0].css('left','100%');
+                    }else{
+                        this._itemArr[this._currentPage - 1].animate({'left':0},300);
+                        this._itemArr[this._currentPage +1].css('left','100%');
+                    }
+                    this._pointArr[this._currentPage].removeClass("current-point");
+                    this._currentPage --;
+                    if(this._currentPage < 0) this._currentPage = this._num -1;
+                    this._pointArr[this._currentPage].addClass("current-point");
                 }else{
-                    this._itemArr[this._currentPage - 1].animate({'left':0},300);
-                    this._itemArr[this._currentPage +1].css('left','100%');
+                    this._itemArr[this._currentPage].animate({'left':'-100%'},300);
+                    if(this._currentPage == 0){
+                        this._itemArr[this._num - 1].css('left','-100%');
+                        this._itemArr[this._currentPage +1].animate({'left':0},300);
+                    }else if(this._currentPage == this._num - 1){
+                        this._itemArr[this._currentPage - 1].css('left','-100%');
+                        this._itemArr[0].animate({'left':0},300);
+                    }else{
+                        this._itemArr[this._currentPage - 1].css('left','-100%');
+                        this._itemArr[this._currentPage + 1].animate({'left':0},300);
+                    }
+                    this._pointArr[this._currentPage].removeClass("current-point");
+                    this._currentPage ++;
+                    if(this._currentPage > this._num - 1) this._currentPage = 0;
+                    this._pointArr[this._currentPage].addClass("current-point");
                 }
-                this._pointArr[this._currentPage].removeClass("current-point");
-                this._currentPage --;
-                if(this._currentPage < 0) this._currentPage = this._num -1;
-                this._pointArr[this._currentPage].addClass("current-point");
             }else{
-                this._itemArr[this._currentPage].animate({'left':'-100%'},300);
+                this._itemArr[this._currentPage].animate({'left':0},300);
                 if(this._currentPage == 0){
-                    this._itemArr[this._num - 1].css('left','-100%');
-                    this._itemArr[this._currentPage +1].animate({'left':0},300);
+                    this._itemArr[this._num - 1].animate({'left':'-100%'},300);
+                    this._itemArr[this._currentPage +1].animate({'left':'100%'},300);
                 }else if(this._currentPage == this._num - 1){
-                    this._itemArr[this._currentPage - 1].css('left','-100%');
-                    this._itemArr[0].animate({'left':0},300);
+                    this._itemArr[this._currentPage - 1].animate({'left':'-100%'},300);
+                    this._itemArr[0].animate({'left':'100%'},300);
                 }else{
-                    this._itemArr[this._currentPage - 1].css('left','-100%');
-                    this._itemArr[this._currentPage + 1].animate({'left':0},300);
+                    this._itemArr[this._currentPage - 1].animate({'left':'-100%'},300);
+                    this._itemArr[this._currentPage + 1].animate({'left':'100%'},300);
                 }
-                this._pointArr[this._currentPage].removeClass("current-point");
-                this._currentPage ++;
-                if(this._currentPage > this._num - 1) this._currentPage = 0;
-                this._pointArr[this._currentPage].addClass("current-point");
             }
-        }else{
+        }else if(this._num == 2){
+            let index = this._currentPage == 0 ? 1 : 0;
+            if(Math.abs(this._movePos) > this._parentW / 3){
+                if(this._movePos > 0){
+                    this._itemArr[this._currentPage].animate({'left':'100%'},300);
+                }else{
+                    this._itemArr[this._currentPage].animate({'left':'-100%'},300);
+                }
+                this._itemArr[index].animate({'left':0},300);
+                this._pointArr[this._currentPage].removeClass("current-point");
+                this._pointArr[index].addClass("current-point");
+                this._currentPage = index;
+            }else{
+                this._itemArr[this._currentPage].animate({'left':0},300);
+                if(this._movePos > 0){
+                    this._itemArr[index].animate({'left':'-100%'},300);
+                }else{
+                    this._itemArr[index].animate({'left':'100%'},300);
+                }
+            }
+        }else if(this._num == 1){
             this._itemArr[this._currentPage].animate({'left':0},300);
-            if(this._currentPage == 0){
-                this._itemArr[this._num - 1].animate({'left':'-100%'},300);
-                this._itemArr[this._currentPage +1].animate({'left':'100%'},300);
-            }else if(this._currentPage == this._num - 1){
-                this._itemArr[this._currentPage - 1].animate({'left':'-100%'},300);
-                this._itemArr[0].animate({'left':'100%'},300);
-            }else{
-                this._itemArr[this._currentPage - 1].animate({'left':'-100%'},300);
-                this._itemArr[this._currentPage + 1].animate({'left':'100%'},300);
-            }
         }
         this.addTouch();
      },
