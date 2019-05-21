@@ -3,6 +3,7 @@ const swiper = {
     _parentW:null,
     _imgArr:null,
     _callBack:null,
+    _clickEvent:null,
     _config:null,
     _swiperContent:null,
     _swiperPoint:null,
@@ -24,12 +25,15 @@ const swiper = {
     _autoPlay:true,
     _isMobile:false,
     _showPoint:true,
-    init:function(parent,imgArr,config,callBack){
+    _startTime:null,
+    _endTime:null,
+    init:function(parent,imgArr,config,clickEvent,callBack){
         this._parent = parent;
         this._parentW = parent.width();
         this._imgArr = imgArr;
         this._config = config;
         this._callBack = callBack;
+        this._clickEvent = clickEvent;
         this._currentPage = 0;
         this._time = 3000;
         this._itemArr = [];
@@ -88,7 +92,7 @@ const swiper = {
         this.autoPlay();
         this.addTouch();
         this.showPoint();
-        if(this._callBack) this._callBack(this._itemArr);
+        this._callBack && this._callBack(this._itemArr);
     },
     /**判断是都显示轮播点 */
     showPoint:function(){
@@ -174,6 +178,7 @@ const swiper = {
      },
      downFn:function(e){
         e.preventDefault();
+        this._startTime = new Date().getTime();
         this._movePos = 0;
         this._canMove = true;
         this._startX = this._isMobile ? e.originalEvent.targetTouches[0].pageX : e.pageX;
@@ -225,6 +230,10 @@ const swiper = {
      },
      upFn(e){
         if(!this._canMove) return;
+        this._endTime = new Date().getTime();
+        if(this._endTime - this._startTime < 200){
+            this._clickEvent &&  this._clickEvent(this._touchItem); 
+        }
         if(this._isMobile){
             this._touchItem.off('touchstart');
             this._touchItem.off('touchmove');
